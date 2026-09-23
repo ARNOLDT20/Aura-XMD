@@ -10,6 +10,9 @@
   "engines": {
     "node": ">=20"
   },
+  "overrides": {
+    "libsignal": "6.0.0"
+  },
   "dependencies": {
     "@whiskeysockets/baileys": "6.7.24",
     "pino": "^9.0.0"
