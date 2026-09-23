@@ -1,0 +1,17 @@
+{
+  "name": "blaze-md-plugins",
+  "version": "1.0.1",
+  "description": "Plugin-based WhatsApp bot using Baileys",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "node scripts/ensure-deps.js",
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "6.7.24",
+    "pino": "^9.0.0"
+  }
+}
