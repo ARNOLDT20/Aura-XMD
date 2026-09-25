@@ -1,6 +1,6 @@
 // Katabump and generic panel eggs may run `node index.js` directly instead of
 // invoking npm start. Bootstrap production dependencies before loading Baileys.
-require("./scripts/ensure-deps");
+require("./scripts/ensure-deps")();
 
 const {
   default: makeWASocket,
