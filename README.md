@@ -32,6 +32,30 @@ Upload the project files, including `package.json`, `package-lock.json`, `script
 
 If the panel has no separate install-command field, `bash start.sh` still installs missing dependencies automatically before starting the bot. The entrypoint also performs this check itself, so Katabump's default direct command `node index.js` is supported as well. If you use the startup command `npm start` instead, the same bootstrap runs through the `prestart` script. The server must have outbound HTTPS access so npm can reach the registry during the first boot.
 
+### Heroku and other platforms
+
+Aura-XMD is a **worker process**, not an HTTP web server. The included `Procfile` starts it with `npm start`, while the existing `start` script remains unchanged for Katabump, Render background workers, Railway, Fly.io, and generic Node hosts. Set the platform's start command to `npm start` when it does not read `Procfile` automatically.
+
+For Heroku, deploy the repository and use a worker dyno:
+
+```bash
+heroku create your-aura-xmd-app
+heroku config:set BLAZE_SESSION_ID='your-private-session-code' -a your-aura-xmd-app
+heroku ps:scale worker=1 -a your-aura-xmd-app
+heroku logs --tail -a your-aura-xmd-app
+```
+
+Alternatively, use the repository's `app.json` for Heroku app configuration. Do not put a session code in `app.json` or commit it to GitHub. Heroku dynos have ephemeral filesystems, so use `BLAZE_SESSION_ID` and persistent external storage or re-import the session after a dyno recreation; a local `session/` directory alone is not durable there.
+
+Platforms that support Docker can use the included `Dockerfile`; it installs Node.js, Python, FFmpeg, and npm dependencies without affecting the normal Node deployment:
+
+```bash
+docker build -t aura-xmd .
+docker run --restart unless-stopped -e BLAZE_SESSION_ID='your-private-session-code' aura-xmd
+```
+
+For Render/Railway/Fly.io background services, use Node.js 20+, install with `npm ci --omit=dev --no-audit --no-fund`, and start with `npm start`. Do not configure this bot as a web service unless the platform supports a worker/background process, because WhatsApp does not require an HTTP port.
+
 ## First connection
 
 The bot uses a pairing code for a fresh installation. Set `PHONE_NUMBER` to the WhatsApp number being linked, including the country code and digits only; do not include `+`, spaces, parentheses, or hyphens.

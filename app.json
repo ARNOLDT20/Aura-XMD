@@ -1,0 +1,44 @@
+{
+  "name": "Aura-XMD",
+  "description": "Aura-XMD WhatsApp bot powered by Baileys",
+  "repository": "https://github.com/ARNOLDT20/Aura-XMD",
+  "keywords": ["whatsapp", "baileys", "bot", "aura-xmd"],
+  "success_url": "/",
+  "env": {
+    "BOT_NAME": {
+      "description": "Name displayed by the bot",
+      "value": "Aura-XMD"
+    },
+    "OWNER_NAME": {
+      "description": "Owner label shown in bot messages",
+      "value": "ARNOLDT20"
+    },
+    "PHONE_NUMBER": {
+      "description": "WhatsApp pairing number with country code and digits only; leave blank when using BLAZE_SESSION_ID",
+      "value": ""
+    },
+    "BLAZE_SESSION_ID": {
+      "description": "Private Base64 BLAZE session code; use this or PHONE_NUMBER, not both",
+      "value": "",
+      "required": false
+    },
+    "SESSION_FOLDER": {
+      "description": "Persistent authentication directory",
+      "value": "session"
+    },
+    "PREFIX": {
+      "description": "Command prefix",
+      "value": "."
+    },
+    "SEND_CONNECTION_MESSAGE": {
+      "description": "Send the connection message after login",
+      "value": "true"
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+}

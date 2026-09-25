@@ -1,0 +1,8 @@
+node_modules
+session
+data/state.json
+*.log
+.git
+.gitignore
+README.md
+harvested
