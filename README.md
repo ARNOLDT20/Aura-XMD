@@ -199,16 +199,20 @@ Use the bot command for public links from YouTube, TikTok, Instagram, Facebook, 
 .media https://www.tiktok.com/@user/video/123
 .audio https://www.youtube.com/watch?v=example
 .mp3 https://www.youtube.com/watch?v=example
+.song Calm Down Rema
+.music Faded Alan Walker
+.play Believer Imagine Dragons
+.video nature documentary
 .download https://www.tiktok.com/@user/video/123
 .download https://www.youtube.com/watch?v=example audio
 .dl https://www.instagram.com/reel/example 720
 ```
 
-The new `.media` command is a convenient general downloader. `.audio` and `.mp3` always request MP3 extraction, while `.download <url> audio` remains supported. The plugin downloads media locally, sends it back to WhatsApp, and removes the temporary file afterward. Adding a number such as `720` requests a video quality ceiling. Availability depends on public source access, and WhatsApp uploads are limited to practical media sizes.
+The new `.media` command is a convenient general downloader. `.song`, `.music`, and `.play` search YouTube by name and return MP3 audio; `.video` searches by name and returns video. `.audio` and `.mp3` also search by name when no URL is supplied, while `.download <url> audio` remains supported. The plugin downloads media locally, sends it back to WhatsApp, and removes the temporary file afterward. Adding a number such as `720` requests a video quality ceiling. Availability depends on public source access, and WhatsApp uploads are limited to practical media sizes.
 
 ### Short aliases
 
-Every command has a short alias, including `.p` for `.ping`, `.a` for `.alive`, `.m` for `.menu`, `.ch` for `.channel`, `.sch` for `.schedule`, `.al` for `.antilink`, `.sr` for `.statusreact`, `.vv` for `.viewonce`, `.md` for `.media`, `.au` for `.audio`, `.mp` for `.mp3`, and `.px` for `.prefix`. The full list is shown at the bottom of `.menu`.
+Every command has a short alias, including `.p` for `.ping`, `.a` for `.alive`, `.m` for `.menu`, `.ch` for `.channel`, `.sch` for `.schedule`, `.al` for `.antilink`, `.sr` for `.statusreact`, `.vv` for `.viewonce`, `.md` for `.media`, `.au` for `.audio`, `.mp` for `.mp3`, `.mus` for `.music`, `.sg` for `.song`, `.pl` for `.play`, `.vid` for `.video`, and `.px` for `.prefix`. The full list is shown at the bottom of `.menu`.
 
 For direct status posting, use `.selfstatus` or `.me` in any chat. In a group, use `.groupstatus` or `.gc`; reply to a media message to post that media to the group-targeted status:
 
