@@ -44,6 +44,7 @@ function loadPlugins() {
     setsubject: "ss", setdesc: "sd", invite: "inv", statusreact: "sr",
     status: "st", addstatus: "as", statuspost: "sp", selfstatus: "self",
     mystatus: "me", groupstatus: "gs", gcstatus: "gc", viewonce: "vv", download: "dl", save: "sv",
+    media: "md", audio: "au", mp3: "mp",
     prefix: "px", menuimage: "mi", menustyle: "ms", brand: "br"
   };
 

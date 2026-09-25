@@ -8,20 +8,21 @@ function unwrap(message) {
 }
 
 module.exports = {
-  command: ["download", "save"],
-  description: "Download quoted media or a social-media URL",
-  async run({ sock, msg, jid, args, reply, config }) {
+  command: ["download", "save", "media", "audio", "mp3"],
+  description: "Download quoted media, video URLs, or extract MP3 audio",
+  async run({ sock, msg, jid, args, reply, config, command }) {
     const url = args.find(value => /^https?:\/\//i.test(value));
+    const audioCommand = command === "audio" || command === "mp3";
     if (url) {
       let result;
       try {
         await reply("⏳ Fetching the social-media media link. This can take up to 3 minutes...");
         result = await downloadSocial(url, null, {
-          audio: args.includes("audio") || args.includes("mp3"),
+          audio: audioCommand || args.includes("audio") || args.includes("mp3"),
           quality: args.find(value => /^\d{3,4}$/.test(value)) || 720
         });
         const caption = `📥 ${result.title}\n⚡ Downloaded free with yt-dlp\n✅ Please respect the creator's rights.`;
-        const audio = args.includes("audio") || args.includes("mp3");
+        const audio = audioCommand || args.includes("audio") || args.includes("mp3");
         const media = fs.readFileSync(result.filePath);
         await sock.sendMessage(jid, audio
           ? { audio: media, mimetype: "audio/mpeg", fileName: `${result.title.slice(0, 60)}.mp3`, caption }
@@ -35,7 +36,7 @@ module.exports = {
     }
 
     const quoted = getQuotedMessage(msg);
-    if (!quoted) return reply("Reply to media with .download, or use .download <social-media-url>");
+    if (!quoted) return reply("Reply to media with .download/.media, or use .media <url>. For MP3 use .audio <url>");
     const content = unwrap(quoted.message);
     const type = ["imageMessage", "videoMessage", "audioMessage", "documentMessage"].find(key => content[key]);
     if (!type) return reply("This media type cannot be downloaded by the bot.");

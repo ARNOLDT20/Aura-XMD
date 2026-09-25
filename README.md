@@ -183,7 +183,7 @@ Status posting supports a personal status or a group-targeted status. For media,
 
 The owner can retrieve quoted view-once media with `.viewonce` or `.vv`. Use this only for media you are authorized to access; the command requires replying to the original message.
 
-Use `.help` or `.h` for a detailed, categorized guide showing every command and its usage. Reply to regular media with `.download`, `.dl`, or `.sv` to retrieve it. View-once downloads remain owner-only.
+Use `.help` or `.h` for a detailed, categorized guide showing every command and its usage. Reply to regular media with `.download`, `.media`, `.dl`, or `.sv` to retrieve it. View-once downloads remain owner-only.
 
 ### Plugin-based group moderation
 
@@ -196,16 +196,19 @@ The URL downloader uses the bundled open-source `yt-dlp` executable and needs **
 Use the bot command for public links from YouTube, TikTok, Instagram, Facebook, X/Twitter, Pinterest, and other platforms supported by yt-dlp:
 
 ```text
+.media https://www.tiktok.com/@user/video/123
+.audio https://www.youtube.com/watch?v=example
+.mp3 https://www.youtube.com/watch?v=example
 .download https://www.tiktok.com/@user/video/123
 .download https://www.youtube.com/watch?v=example audio
 .dl https://www.instagram.com/reel/example 720
 ```
 
-The plugin downloads the media locally, sends it back to WhatsApp, and removes the temporary file afterward. `.download <url> audio` or `.download <url> mp3` returns MP3 audio; adding a number such as `720` requests a video quality ceiling. Availability depends on the source platform and public-access rules, and WhatsApp uploads are limited to practical media sizes.
+The new `.media` command is a convenient general downloader. `.audio` and `.mp3` always request MP3 extraction, while `.download <url> audio` remains supported. The plugin downloads media locally, sends it back to WhatsApp, and removes the temporary file afterward. Adding a number such as `720` requests a video quality ceiling. Availability depends on public source access, and WhatsApp uploads are limited to practical media sizes.
 
 ### Short aliases
 
-Every command has a short alias, including `.p` for `.ping`, `.a` for `.alive`, `.m` for `.menu`, `.ch` for `.channel`, `.sch` for `.schedule`, `.al` for `.antilink`, `.sr` for `.statusreact`, `.vv` for `.viewonce`, and `.px` for `.prefix`. The full list is shown at the bottom of `.menu`.
+Every command has a short alias, including `.p` for `.ping`, `.a` for `.alive`, `.m` for `.menu`, `.ch` for `.channel`, `.sch` for `.schedule`, `.al` for `.antilink`, `.sr` for `.statusreact`, `.vv` for `.viewonce`, `.md` for `.media`, `.au` for `.audio`, `.mp` for `.mp3`, and `.px` for `.prefix`. The full list is shown at the bottom of `.menu`.
 
 For direct status posting, use `.selfstatus` or `.me` in any chat. In a group, use `.groupstatus` or `.gc`; reply to a media message to post that media to the group-targeted status:
 
