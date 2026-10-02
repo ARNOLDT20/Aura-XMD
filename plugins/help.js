@@ -8,6 +8,8 @@ const guide = `╭━━〔 BLAZE TECH · AURA-XMD HELP 〕━━╮
 │ Check that the bot replies.
 │ .alive / .a
 │ Show bot name and online status.
+│ .health / .ht
+│ Show connection, uptime, memory, session, and latency.
 │ .menu / .m [category]
 │ Show all commands or core/channels/groups/status/tools.
 │ .help / .h

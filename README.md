@@ -105,6 +105,7 @@ On startup, the bot removes the optional `BLAZE~` prefix, decodes and validates 
 - `.menu` — list commands
 - `.ping` — check response
 - `.alive` — show bot status
+- `.health` / `.ht` — show connection, uptime, memory, session, command count, and reply latency
 
 ## Add a plugin
 

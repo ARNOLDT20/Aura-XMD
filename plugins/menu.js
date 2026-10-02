@@ -6,6 +6,7 @@ const sections = {
   core: `╭─〔 ✨ CORE 〕
 │ .ping
 │ .alive
+│ .health / .ht
 │ .menu
 │ .help
 │ .aura status
@@ -57,6 +58,7 @@ const sections = {
 const compactAll = `╭─〔 ✨ CORE 〕
 │ .ping
 │ .alive
+│ .health / .ht
 │ .menu
 │ .help
 │ .aura status

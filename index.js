@@ -42,7 +42,7 @@ function loadPlugins() {
     promote: "pro", demote: "de", kick: "k", add: "ad", mute: "mu",
     unmute: "um", groupinfo: "gi", tagall: "ta", open: "op", close: "cl",
     setsubject: "ss", setdesc: "sd", invite: "inv", statusreact: "sr",
-    status: "st", addstatus: "as", statuspost: "sp", selfstatus: "self",
+    status: "st", health: "ht", addstatus: "as", statuspost: "sp", selfstatus: "self",
     mystatus: "me", groupstatus: "gs", gcstatus: "gc", viewonce: "vv", download: "dl", save: "sv",
     media: "md", audio: "au", mp3: "mp", music: "mus", song: "sg", play: "pl", video: "vid",
     prefix: "px", menuimage: "mi", menustyle: "ms", brand: "br"
@@ -274,14 +274,21 @@ async function startBot() {
     socket.ev.on("connection.update", async update => {
       const { connection, lastDisconnect } = update;
 
-      if (connection === "connecting") console.log("Connecting to WhatsApp...");
+      if (connection === "connecting") {
+        config.runtime.connectionState = "connecting";
+        console.log("Connecting to WhatsApp...");
+      }
       if (connection === "open") {
+        config.runtime.connectionState = "open";
+        config.runtime.lastConnectedAt = Date.now();
         starting = false;
         console.log(`Connected: ${config.botName}`);
         await sendConnectionMessage(socket);
         startAutoPoster(socket);
       }
       if (connection === "close") {
+        config.runtime.connectionState = "closed";
+        config.runtime.lastDisconnectedAt = Date.now();
         starting = false;
         socket = undefined;
         const code = getDisconnectCode(lastDisconnect);
