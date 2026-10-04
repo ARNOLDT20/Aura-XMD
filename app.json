@@ -23,7 +23,7 @@
       "required": false
     },
     "DATABASE_URL": {
-      "description": "PostgreSQL connection URL for isolated auth and per-user bot state",
+      "description": "PostgreSQL connection URL for isolated auth and per-user bot state; use Render's external URL when deploying this app on Heroku",
       "required": false
     },
     "PUBLIC_URL": {

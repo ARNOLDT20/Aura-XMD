@@ -36,14 +36,24 @@ If the panel has no separate install-command field, `bash start.sh` still instal
 
 Aura-XMD is a persistent controller plus WhatsApp session service. The included `Procfile` starts one web process with `npm start`; that process also serves `/pair` and `/health`. The existing `start` script remains compatible with Katabump, Render, Railway, Fly.io, Docker, and generic Node hosts.
 
-For Heroku, deploy the repository and use one web dyno:
+For Heroku, deploy the repository and use one web dyno. You can reuse the same Render database; do **not** provision a second Heroku Postgres add-on:
 
 ```bash
 heroku create your-aura-xmd-app
-heroku config:set PHONE_NUMBER=255700000000 DATABASE_URL='postgres://...' PUBLIC_URL='https://your-aura-xmd-app.herokuapp.com' -a your-aura-xmd-app
+heroku config:set PHONE_NUMBER=255700000000 PUBLIC_URL='https://your-aura-xmd-app.herokuapp.com' -a your-aura-xmd-app
 heroku ps:scale web=1 -a your-aura-xmd-app
 heroku logs --tail -a your-aura-xmd-app
 ```
+
+After creating the Heroku app, set the **Render external PostgreSQL URL** as the Heroku config variable. Do this from your own terminal so the password never enters GitHub:
+
+```bash
+export RENDER_DATABASE_URL='postgresql://USER:PASSWORD@EXTERNAL_RENDER_HOST/auraxmd?sslmode=require'
+heroku config:set DATABASE_URL="$RENDER_DATABASE_URL" -a your-aura-xmd-app
+heroku config:set SESSION_ENCRYPTION_KEY="$(openssl rand -hex 32)" -a your-aura-xmd-app
+```
+
+Use the **external** URL from Render's database **Connect** menu. A Render internal URL works only for services running inside the same Render region; it will not work from Heroku. Never paste the database password into `app.json`, source code, or a public issue.
 
 Alternatively, use the repository's `app.json` for Heroku app configuration. Do not put a session code in `app.json` or commit it to GitHub. Heroku dynos have ephemeral filesystems, so use PostgreSQL; a local `session/` directory alone is not durable there.
 
@@ -79,20 +89,21 @@ PAIR_TOKEN=choose-a-private-pair-token
 
 Render recommends the internal URL when the service and database are in the same region. See the [official Render Postgres connection guide](https://render.com/docs/postgresql-creating-connecting).
 
-#### Heroku
+#### Heroku with the same Render database
 
-From the Heroku CLI, provision Postgres for the app. Heroku automatically supplies the resulting `DATABASE_URL` config variable:
+If you want Heroku to use the same Render database, skip Heroku Postgres provisioning. Create the Heroku app, then set the Render **external** URL:
 
 ```bash
-heroku addons:create heroku-postgresql:essential-0 -a your-aura-xmd-app
-heroku pg:wait -a your-aura-xmd-app
+heroku create your-aura-xmd-app
+export RENDER_DATABASE_URL='postgresql://USER:PASSWORD@EXTERNAL_RENDER_HOST/auraxmd?sslmode=require'
+heroku config:set DATABASE_URL="$RENDER_DATABASE_URL" -a your-aura-xmd-app
 heroku config:set SESSION_ENCRYPTION_KEY="$(openssl rand -hex 32)" -a your-aura-xmd-app
 heroku config:set PUBLIC_URL="https://your-aura-xmd-app.herokuapp.com" -a your-aura-xmd-app
 heroku config:set PAIR_TOKEN="choose-a-private-pair-token" -a your-aura-xmd-app
 heroku ps:scale web=1 -a your-aura-xmd-app
 ```
 
-The plan name and availability are controlled by Heroku. Check the [official Heroku Postgres provisioning guide](https://devcenter.heroku.com/articles/provisioning-heroku-postgres) if `essential-0` is unavailable for your account.
+Heroku's app config stores `DATABASE_URL` securely and Aura-XMD creates its `aura_sessions` table automatically. If you prefer a separate Heroku database, provision one with the [official Heroku Postgres guide](https://devcenter.heroku.com/articles/provisioning-heroku-postgres) instead.
 
 #### Any other host
 
