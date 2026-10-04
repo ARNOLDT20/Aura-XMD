@@ -56,6 +56,53 @@ docker run --restart unless-stopped -e BLAZE_SESSION_ID='your-private-session-co
 
 For Render/Railway/Fly.io, use a persistent web/background service with Node.js 20+, install with `npm ci --omit=dev --no-audit --no-fund`, start with `npm start`, and set `DATABASE_URL`. The HTTP listener is included so the same process can expose the pairing link; it does not replace the WhatsApp WebSocket connection.
 
+### Create the database — easiest setup
+
+You do **not** need to create tables manually. Aura-XMD creates its `aura_sessions` table automatically on first boot.
+
+#### Render
+
+1. Open **Render Dashboard → New + → PostgreSQL**, or use the [Render Postgres creation page](https://dashboard.render.com/new/database).
+2. Give it a name and select the **same region** as the Aura-XMD web service.
+3. Create the database and open its **Connect** menu.
+4. Copy the **internal database URL** into the Aura-XMD service environment variable named `DATABASE_URL`.
+5. Add these environment variables to the Aura-XMD service:
+
+```env
+DATABASE_URL=the-render-internal-postgres-url
+SESSION_ENCRYPTION_KEY=generate-a-long-random-secret
+PUBLIC_URL=https://your-service.onrender.com
+PAIR_TOKEN=choose-a-private-pair-token
+```
+
+6. Deploy or restart the service. Open `https://your-service.onrender.com/pair`.
+
+Render recommends the internal URL when the service and database are in the same region. See the [official Render Postgres connection guide](https://render.com/docs/postgresql-creating-connecting).
+
+#### Heroku
+
+From the Heroku CLI, provision Postgres for the app. Heroku automatically supplies the resulting `DATABASE_URL` config variable:
+
+```bash
+heroku addons:create heroku-postgresql:essential-0 -a your-aura-xmd-app
+heroku pg:wait -a your-aura-xmd-app
+heroku config:set SESSION_ENCRYPTION_KEY="$(openssl rand -hex 32)" -a your-aura-xmd-app
+heroku config:set PUBLIC_URL="https://your-aura-xmd-app.herokuapp.com" -a your-aura-xmd-app
+heroku config:set PAIR_TOKEN="choose-a-private-pair-token" -a your-aura-xmd-app
+heroku ps:scale web=1 -a your-aura-xmd-app
+```
+
+The plan name and availability are controlled by Heroku. Check the [official Heroku Postgres provisioning guide](https://devcenter.heroku.com/articles/provisioning-heroku-postgres) if `essential-0` is unavailable for your account.
+
+#### Any other host
+
+Create a PostgreSQL database with that provider, copy its connection URL into `DATABASE_URL`, and set `SESSION_ENCRYPTION_KEY`, `PUBLIC_URL`, and optionally `PAIR_TOKEN`. Start Aura-XMD with:
+
+```bash
+npm ci --omit=dev --no-audit --no-fund
+npm start
+```
+
 ## Multi-number architecture and first connection
 
 Aura-XMD runs one controller plus isolated user runtimes. Every linked number gets its own Baileys authentication files, command configuration, channel schedules, group settings, reconnect loop, and health state. One user's logout or reconnect does not replace another user's socket.
