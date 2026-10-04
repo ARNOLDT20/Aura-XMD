@@ -1,6 +1,7 @@
 node_modules
 session
 data/state.json
+data/sessions.json
 *.log
 .git
 .gitignore

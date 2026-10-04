@@ -7,6 +7,7 @@ const sections = {
 │ .ping
 │ .alive
 │ .health / .ht
+│ .pair <phone-number> / .pr
 │ .menu
 │ .help
 │ .aura status
@@ -59,6 +60,7 @@ const compactAll = `╭─〔 ✨ CORE 〕
 │ .ping
 │ .alive
 │ .health / .ht
+│ .pair <phone-number> / .pr
 │ .menu
 │ .help
 │ .aura status

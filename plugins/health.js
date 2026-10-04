@@ -5,45 +5,18 @@ function formatDuration(totalSeconds) {
   const days = Math.floor(seconds / 86400); seconds %= 86400;
   const hours = Math.floor(seconds / 3600); seconds %= 3600;
   const minutes = Math.floor(seconds / 60); seconds %= 60;
-  return [days ? `${days}d` : "", hours ? `${hours}h` : "", minutes ? `${minutes}m` : "", `${seconds}s`]
-    .filter(Boolean).join(" ");
+  return [days ? `${days}d` : "", hours ? `${hours}h` : "", minutes ? `${minutes}m` : "", `${seconds}s`].filter(Boolean).join(" ");
 }
-
-function sessionFileCount(folder) {
-  try {
-    return fs.readdirSync(folder).filter(name => name.endsWith(".json") || name.endsWith(".md" )).length;
-  } catch {
-    return 0;
-  }
-}
-
 module.exports = {
   command: "health",
-  description: "Show bot health, uptime, connection, memory, and latency",
-  async run({ sock, jid, msg, reply, config }) {
-    const startedAt = config.runtime?.startedAt || Date.now();
-    const before = Date.now();
-    await reply("⏱️ Checking Aura-XMD health...");
-    const latency = Date.now() - before;
-    const memory = process.memoryUsage();
-    const state = config.runtime || {};
+  description: "Show this linked session health and uptime",
+  async run({ sock, reply, config }) {
+    const before = Date.now(); await reply("⏱️ Checking Aura-XMD health...");
+    const memory = process.memoryUsage(); const runtime = config.runtime || {};
     const account = String(sock.user?.id || "not linked").split(":")[0];
-    const sessionFiles = sessionFileCount(config.sessionFolder);
-    const status = state.connectionState || (sock.user ? "open" : "starting");
+    let sessionFiles = 0; try { sessionFiles = fs.readdirSync(config.sessionFolder).length; } catch {}
+    const status = runtime.connectionState || (sock.user ? "open" : "starting");
     const icon = status === "open" ? "🟢" : status === "connecting" ? "🟡" : "🔴";
-
-    return reply([
-      `╭━━〔 ${config.botName} HEALTH 〕━━╮`,
-      `│ ${icon} Connection: ${status}`,
-      `│ Account: ${account}`,
-      `│ Uptime: ${formatDuration((Date.now() - startedAt) / 1000)}`,
-      `│ Reply latency: ${latency}ms`,
-      `│ Memory: ${Math.round(memory.rss / 1024 / 1024)}MB RSS`,
-      `│ Commands: ${config.totalCommands || 0}`,
-      `│ Session files: ${sessionFiles}`,
-      `│ Last connected: ${state.lastConnectedAt ? new Date(state.lastConnectedAt).toISOString() : "not yet"}`,
-      `│ Last disconnect: ${state.lastDisconnectedAt ? new Date(state.lastDisconnectedAt).toISOString() : "none"}`,
-      `╰━━━━━━━━━━━━━━━━━━━━╯`
-    ].join("\n"));
+    return reply(`╭━━〔 ${config.botName} HEALTH 〕━━╮\n│ ${icon} Connection: ${status}\n│ Account: ${account}\n│ Session: ${config.sessionId}\n│ Uptime: ${formatDuration((Date.now() - (runtime.startedAt || Date.now())) / 1000)}\n│ Reply latency: ${Date.now() - before}ms\n│ Memory: ${Math.round(memory.rss / 1024 / 1024)}MB RSS\n│ Commands: ${config.totalCommands || 0}\n│ Session files: ${sessionFiles}\n│ Last connected: ${runtime.lastConnectedAt ? new Date(runtime.lastConnectedAt).toISOString() : "not yet"}\n╰━━━━━━━━━━━━━━━━━━━━╯`);
   }
 };

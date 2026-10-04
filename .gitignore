@@ -3,3 +3,4 @@ session/
 .env
 *.log
 data/state.json
+data/sessions.json

@@ -22,6 +22,22 @@
       "value": "",
       "required": false
     },
+    "DATABASE_URL": {
+      "description": "PostgreSQL connection URL for isolated auth and per-user bot state",
+      "required": false
+    },
+    "PUBLIC_URL": {
+      "description": "Public HTTPS URL used in pairing instructions",
+      "required": false
+    },
+    "SESSION_ENCRYPTION_KEY": {
+      "description": "Secret used to encrypt auth blobs before storing them in PostgreSQL",
+      "required": false
+    },
+    "PAIR_TOKEN": {
+      "description": "Optional secret required by the web /pair form",
+      "required": false
+    },
     "SESSION_FOLDER": {
       "description": "Persistent authentication directory",
       "value": "session"
@@ -36,7 +52,7 @@
     }
   },
   "formation": {
-    "worker": {
+    "web": {
       "quantity": 1,
       "size": "basic"
     }

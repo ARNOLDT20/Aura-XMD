@@ -10,6 +10,8 @@ const guide = `╭━━〔 BLAZE TECH · AURA-XMD HELP 〕━━╮
 │ Show bot name and online status.
 │ .health / .ht
 │ Show connection, uptime, memory, session, and latency.
+│ .pair <phone-number> / .pr
+│ Create an isolated session and receive a pairing code.
 │ .menu / .m [category]
 │ Show all commands or core/channels/groups/status/tools.
 │ .help / .h

@@ -34,18 +34,18 @@ If the panel has no separate install-command field, `bash start.sh` still instal
 
 ### Heroku and other platforms
 
-Aura-XMD is a **worker process**, not an HTTP web server. The included `Procfile` starts it with `npm start`, while the existing `start` script remains unchanged for Katabump, Render background workers, Railway, Fly.io, and generic Node hosts. Set the platform's start command to `npm start` when it does not read `Procfile` automatically.
+Aura-XMD is a persistent controller plus WhatsApp session service. The included `Procfile` starts one web process with `npm start`; that process also serves `/pair` and `/health`. The existing `start` script remains compatible with Katabump, Render, Railway, Fly.io, Docker, and generic Node hosts.
 
-For Heroku, deploy the repository and use a worker dyno:
+For Heroku, deploy the repository and use one web dyno:
 
 ```bash
 heroku create your-aura-xmd-app
-heroku config:set BLAZE_SESSION_ID='your-private-session-code' -a your-aura-xmd-app
-heroku ps:scale worker=1 -a your-aura-xmd-app
+heroku config:set PHONE_NUMBER=255700000000 DATABASE_URL='postgres://...' PUBLIC_URL='https://your-aura-xmd-app.herokuapp.com' -a your-aura-xmd-app
+heroku ps:scale web=1 -a your-aura-xmd-app
 heroku logs --tail -a your-aura-xmd-app
 ```
 
-Alternatively, use the repository's `app.json` for Heroku app configuration. Do not put a session code in `app.json` or commit it to GitHub. Heroku dynos have ephemeral filesystems, so use `BLAZE_SESSION_ID` and persistent external storage or re-import the session after a dyno recreation; a local `session/` directory alone is not durable there.
+Alternatively, use the repository's `app.json` for Heroku app configuration. Do not put a session code in `app.json` or commit it to GitHub. Heroku dynos have ephemeral filesystems, so use PostgreSQL; a local `session/` directory alone is not durable there.
 
 Platforms that support Docker can use the included `Dockerfile`; it installs Node.js, Python, FFmpeg, and npm dependencies without affecting the normal Node deployment:
 
@@ -54,7 +54,34 @@ docker build -t aura-xmd .
 docker run --restart unless-stopped -e BLAZE_SESSION_ID='your-private-session-code' aura-xmd
 ```
 
-For Render/Railway/Fly.io background services, use Node.js 20+, install with `npm ci --omit=dev --no-audit --no-fund`, and start with `npm start`. Do not configure this bot as a web service unless the platform supports a worker/background process, because WhatsApp does not require an HTTP port.
+For Render/Railway/Fly.io, use a persistent web/background service with Node.js 20+, install with `npm ci --omit=dev --no-audit --no-fund`, start with `npm start`, and set `DATABASE_URL`. The HTTP listener is included so the same process can expose the pairing link; it does not replace the WhatsApp WebSocket connection.
+
+## Multi-number architecture and first connection
+
+Aura-XMD runs one controller plus isolated user runtimes. Every linked number gets its own Baileys authentication files, command configuration, channel schedules, group settings, reconnect loop, and health state. One user's logout or reconnect does not replace another user's socket.
+
+For production on Heroku, Render, Railway, or another ephemeral platform, set `DATABASE_URL` to PostgreSQL. Set a long random `SESSION_ENCRYPTION_KEY` too; Aura encrypts session JSON blobs before storing them in the database. Without `DATABASE_URL`, it uses `data/sessions.json` as a local development fallback; that fallback is not durable on Heroku/Render restarts.
+
+The controller can create another isolated number from WhatsApp:
+
+```text
+.pair 255625606354
+.pr 255625606354
+```
+
+The user enters the returned code at **WhatsApp → Linked devices → Link a device → Link with phone number instead**. Each paired number is restored automatically from PostgreSQL on the next deployment.
+
+The process also serves a browser pairing page at `/pair` and a JSON service check at `/health`. Set `PUBLIC_URL` to the public HTTPS app URL, then open:
+
+```text
+https://your-public-host.example/pair
+```
+
+If the pairing page is public, set `PAIR_TOKEN` so only people with that secret can create sessions. The WhatsApp `.pair` command remains available through the linked controller account.
+
+The first/controller number still needs one initial login. It can be paired with `PHONE_NUMBER`, or an existing `BLAZE_SESSION_ID` can be imported for migration. New user numbers do not need session IDs: they are created with `.pair` or the web form.
+
+Existing single-session installs remain compatible: the controller continues using `session/`, and an existing `data/state.json` is migrated into the controller tenant on first startup.
 
 ## First connection
 
@@ -68,7 +95,7 @@ PHONE_NUMBER=255700000000 OWNER_NAME=Arnold npm start
 
 When the code appears in the console, open WhatsApp and choose **Linked devices → Link a device → Link with phone number instead**, then enter the code. After pairing, the credentials are saved under `session/`, so later restarts connect automatically without requesting another code.
 
-For panels that provide an environment-variable screen, add `PHONE_NUMBER` there instead of placing it in source code. Keep the `session/` directory persistent between deployments.
+For panels that provide an environment-variable screen, add `PHONE_NUMBER` there instead of placing it in source code. For multi-number production, use PostgreSQL and keep `DATABASE_URL` private. A local `session/` directory is still supported for the controller and single-server development, but it is not a replacement for a persistent database on ephemeral platforms.
 
 ## Configuration
 
@@ -85,6 +112,12 @@ The following environment variables are supported:
 | `ALLOW_SELF_MESSAGES` | `false` | Set `true` to allow commands sent from the bot account for testing |
 | `SEND_CONNECTION_MESSAGE` | `true` | Send a success message to the linked account when connected |
 | `SESSION_FOLDER` | `session` | Authentication directory, resolved relative to the project |
+| `DATABASE_URL` | empty | PostgreSQL URL for durable multi-session auth and state |
+| `SESSION_ENCRYPTION_KEY` | empty | Encrypts auth blobs stored in PostgreSQL; strongly recommended |
+| `PUBLIC_URL` | empty | Public URL shown in pairing instructions |
+| `PAIR_TOKEN` | empty | Optional token protecting the web pairing form |
+| `MAX_SESSIONS` | `0` | Maximum additional linked sessions; `0` means unlimited |
+| `PORT` | `3000` | HTTP port for `/pair` and `/health` |
 | `RECONNECT_DELAY_MS` | `5000` | Delay between transient reconnect attempts |
 | `LOG_LEVEL` | `silent` | Pino log level; use `info` while diagnosing connection issues |
 
@@ -106,6 +139,7 @@ On startup, the bot removes the optional `BLAZE~` prefix, decodes and validates 
 - `.ping` — check response
 - `.alive` — show bot status
 - `.health` / `.ht` — show connection, uptime, memory, session, command count, and reply latency
+- `.pair <phone-number>` / `.pr` — create an isolated linked-number session
 
 ## Add a plugin
 

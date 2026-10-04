@@ -17,6 +17,11 @@ module.exports = {
   sendConnectionMessage: process.env.SEND_CONNECTION_MESSAGE !== "false",
   sessionFolder: path.resolve(__dirname, process.env.SESSION_FOLDER || "session"),
   reconnectDelayMs: Number(process.env.RECONNECT_DELAY_MS || 5000),
+  databaseUrl: process.env.DATABASE_URL || "",
+  publicUrl: String(process.env.PUBLIC_URL || "").replace(/\/$/, ""),
+  port: Number(process.env.PORT || 3000),
+  pairToken: String(process.env.PAIR_TOKEN || "").trim(),
+  maxSessions: Number(process.env.MAX_SESSIONS || 0),
   runtime: {
     startedAt: Date.now(),
     connectionState: "starting",
