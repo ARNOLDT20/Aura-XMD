@@ -121,16 +121,27 @@ async function enforceAntilink(runtime, msg, jid, text) {
   } catch (error) { console.error(`[${runtime.id}] moderation failed:`, error.message); return false; }
 }
 
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 async function requestPairing(runtime, phone) {
+  if (runtime.sock.user) return { error: "This number is already connected. Remove it from WhatsApp Linked devices before pairing again." };
+  if (runtime.pairingCode && Date.now() - runtime.pairingIssuedAt < 110000) return { code: runtime.pairingCode, id: runtime.id };
   if (runtime.pairingPromise) return runtime.pairingPromise;
-  runtime.pairingPromise = new Promise(resolve => { runtime.resolvePairing = resolve; runtime.pairingPhone = phone; });
-  const request = async () => {
-    try { const code = await runtime.sock.requestPairingCode(phone); runtime.pairingCode = code; runtime.resolvePairing({ code, id: runtime.id }); }
-    catch (error) { runtime.resolvePairing({ error: error.message, id: runtime.id }); }
-  };
-  if (runtime.sock.user) return { error: "This number is already connected." };
-  setTimeout(request, 2000);
-  return runtime.pairingPromise;
+  runtime.pairingPromise = (async () => {
+    let lastError = "WhatsApp socket was not ready.";
+    // Render and Heroku can take several seconds to establish the first WebSocket.
+    for (let attempt = 1; attempt <= 6; attempt += 1) {
+      if (runtime.sock.user) return { error: "This number is already connected." };
+      await sleep(attempt === 1 ? 7000 : 4000);
+      try {
+        const code = await runtime.sock.requestPairingCode(phone);
+        if (code) { runtime.pairingCode = String(code).replace(/\s+/g, ""); runtime.pairingIssuedAt = Date.now(); return { code: runtime.pairingCode, id: runtime.id }; }
+      } catch (error) { lastError = error.message; console.warn(`[${runtime.id}] pairing attempt ${attempt}/6 failed: ${lastError}`); }
+    }
+    return { error: `WhatsApp did not accept a pairing request after several attempts: ${lastError}` };
+  })();
+  const result = await runtime.pairingPromise;
+  runtime.pairingPromise = null;
+  return result;
 }
 
 async function connectSession(id, phone = "", controller = false) {

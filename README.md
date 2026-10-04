@@ -152,6 +152,8 @@ The controller can create another isolated number from WhatsApp:
 
 The user enters the returned code at **WhatsApp → Linked devices → Link a device → Link with phone number instead**. Each paired number is restored automatically from PostgreSQL on the next deployment.
 
+Pairing codes are short-lived and single-use. Generate a fresh code, enter it immediately, and use the exact digits-only number with country code (for example `255625606354`, not `+255 625 606 354`). Remove any old failed Aura-XMD entry from **WhatsApp → Linked devices** before retrying. Do not run two Aura-XMD deployments while pairing the same number.
+
 The process also serves a browser pairing page at `/pair` and a JSON service check at `/health`. Set `PUBLIC_URL` to the public HTTPS app URL, then open:
 
 ```text
