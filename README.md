@@ -1,6 +1,10 @@
-# BLAZE-MD with Plugins
+# Aura-XMD · BLAZE TECH
 
-A small WhatsApp bot built with [Baileys](https://github.com/WhiskeySockets/Baileys). It loads command plugins from `plugins/`, persists authentication in `session/`, and reconnects after transient connection failures.
+A multi-session WhatsApp bot built with [Baileys](https://github.com/WhiskeySockets/Baileys). It loads command plugins from `plugins/`, persists isolated user sessions in PostgreSQL, and reconnects after transient connection failures.
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ARNOLDT20/Aura-XMD)
+
+The Heroku button opens the official `app.json` template. It asks for `DATABASE_URL` and `SESSION_ENCRYPTION_KEY`; paste Render's **external** PostgreSQL URL if you want Heroku to use the same database. Never commit that URL.
 
 ## Requirements
 
@@ -56,6 +60,25 @@ heroku config:set SESSION_ENCRYPTION_KEY="$(openssl rand -hex 32)" -a your-aura-
 Use the **external** URL from Render's database **Connect** menu. A Render internal URL works only for services running inside the same Render region; it will not work from Heroku. Never paste the database password into `app.json`, source code, or a public issue.
 
 Alternatively, use the repository's `app.json` for Heroku app configuration. Do not put a session code in `app.json` or commit it to GitHub. Heroku dynos have ephemeral filesystems, so use PostgreSQL; a local `session/` directory alone is not durable there.
+
+### Render: choose Web Service, not Static Site
+
+Aura-XMD must be deployed as a **Render Web Service**. Do not choose **Static Site**: Static Sites cannot run Node.js, Baileys WebSockets, the persistent connection loop, or the `/pair` server.
+
+1. In Render, choose **New + → Web Service** and connect `ARNOLDT20/Aura-XMD`.
+2. Set the runtime to Node.js and use:
+
+```text
+Build command: npm ci --omit=dev --no-audit --no-fund
+Start command: npm start
+```
+
+3. Create a Render PostgreSQL database in the same region.
+4. Put the database's **Internal Database URL** into the Web Service's `DATABASE_URL` variable.
+5. Add `SESSION_ENCRYPTION_KEY`, `PUBLIC_URL`, and optionally `PAIR_TOKEN`.
+6. Deploy. Your pairing page will be `https://YOUR-SERVICE.onrender.com/pair`.
+
+Use Render's **External Database URL** only when the bot runs outside Render, such as on Heroku. Do not run the Render and Heroku bot instances at the same time against the same database.
 
 Platforms that support Docker can use the included `Dockerfile`; it installs Node.js, Python, FFmpeg, and npm dependencies without affecting the normal Node deployment:
 

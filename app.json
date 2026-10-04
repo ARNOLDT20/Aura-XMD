@@ -24,7 +24,7 @@
     },
     "DATABASE_URL": {
       "description": "PostgreSQL connection URL for isolated auth and per-user bot state; use Render's external URL when deploying this app on Heroku",
-      "required": false
+      "required": true
     },
     "PUBLIC_URL": {
       "description": "Public HTTPS URL used in pairing instructions",
@@ -32,7 +32,7 @@
     },
     "SESSION_ENCRYPTION_KEY": {
       "description": "Secret used to encrypt auth blobs before storing them in PostgreSQL",
-      "required": false
+      "required": true
     },
     "PAIR_TOKEN": {
       "description": "Optional secret required by the web /pair form",
