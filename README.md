@@ -160,6 +160,32 @@ The process also serves a browser pairing page at `/pair` and a JSON service che
 https://your-public-host.example/pair
 ```
 
+## Owner dashboard
+
+Aura-XMD includes a mobile-first owner dashboard at `/dashboard`. It is inspired by the supplied neon bot-console design but redesigned for Aura-XMD and BLAZE TECH. It shows:
+
+- Live online, connecting, and offline session counts
+- Every isolated WhatsApp runtime and linked account
+- System uptime and automatic 10-second refresh
+- Node.js version, platform, architecture, hostname, and memory use
+- Loaded command and alias totals
+- PostgreSQL versus local-fallback status
+- Quick links to pairing, health, and the public portal
+
+Protect it in production with a dashboard token:
+
+```env
+DASHBOARD_TOKEN=use-a-long-random-secret
+```
+
+Then open:
+
+```text
+https://your-public-host.example/dashboard?token=use-a-long-random-secret
+```
+
+If `DASHBOARD_TOKEN` is not set, Aura-XMD falls back to `PAIR_TOKEN`; in local development with neither token set, the dashboard is open. Never leave both unset on a public deployment. The dashboard never displays database passwords, session credentials, or auth blobs.
+
 If the pairing page is public, set `PAIR_TOKEN` so only people with that secret can create sessions. The WhatsApp `.pair` command remains available through the linked controller account.
 
 The first/controller number still needs one initial login. It can be paired with `PHONE_NUMBER`, or an existing `BLAZE_SESSION_ID` can be imported for migration. New user numbers do not need session IDs: they are created with `.pair` or the web form.

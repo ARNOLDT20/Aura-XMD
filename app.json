@@ -35,7 +35,11 @@
       "required": true
     },
     "PAIR_TOKEN": {
-      "description": "Optional secret required by the web /pair form",
+      "description": "Optional secret required by the browser pairing form",
+      "required": false
+    },
+    "DASHBOARD_TOKEN": {
+      "description": "Private token for the Aura-XMD owner dashboard; use a long random value",
       "required": false
     },
     "SESSION_FOLDER": {
