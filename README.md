@@ -172,19 +172,19 @@ Aura-XMD includes a mobile-first owner dashboard at `/dashboard` (aliases: `/pan
 - PostgreSQL versus local-fallback status
 - Quick links to pairing, health, and the public portal
 
-Protect it in production with a dashboard token:
+Protect it in production with a normal dashboard password:
 
 ```env
-DASHBOARD_TOKEN=use-a-long-random-secret
+DASHBOARD_PASSWORD=choose-a-strong-dashboard-password
 ```
 
 Then open the simple link:
 
 ```text
-https://your-public-host.example/dashboard?token=use-a-long-random-secret
+https://your-public-host.example/dashboard
 ```
 
-You can also open `/dashboard` without the query string; Aura-XMD will show a friendly token form instead of a not-found page. If `DASHBOARD_TOKEN` is not set, Aura-XMD falls back to `PAIR_TOKEN`; in local development with neither token set, the dashboard is open. Never leave both unset on a public deployment. The dashboard never displays database passwords, session credentials, or auth blobs.
+Enter the password once. Aura-XMD stores a secure HttpOnly browser session cookie, so you do not need to copy tokens into the URL. Use the dashboard's **Logout** button when finished. `DASHBOARD_TOKEN` remains supported as a backward-compatible fallback for older deployments, but `DASHBOARD_PASSWORD` takes priority. Never leave both unset on a public deployment. The dashboard never displays database passwords, session credentials, or auth blobs.
 
 If Render shows `404 Not Found`, deploy the latest `main` commit and confirm the service is a **Web Service** running `npm start`, not a Static Site. The `/health` response includes the dashboard URL so it can be copied directly.
 

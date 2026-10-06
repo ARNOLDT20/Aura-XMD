@@ -21,6 +21,7 @@ module.exports = {
   publicUrl: String(process.env.PUBLIC_URL || "").replace(/\/$/, ""),
   port: Number(process.env.PORT || 3000),
   pairToken: String(process.env.PAIR_TOKEN || "").trim(),
+  dashboardPassword: String(process.env.DASHBOARD_PASSWORD || "").trim(),
   dashboardToken: String(process.env.DASHBOARD_TOKEN || process.env.PAIR_TOKEN || "").trim(),
   maxSessions: Number(process.env.MAX_SESSIONS || 0),
   runtime: {
