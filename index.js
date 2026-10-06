@@ -123,14 +123,14 @@ async function enforceAntilink(runtime, msg, jid, text) {
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 async function requestPairing(runtime, phone) {
-  if (runtime.sock.user) return { error: "This number is already connected. Remove it from WhatsApp Linked devices before pairing again." };
+  if (runtime.config.runtime.connectionState === "open" && runtime.sock.user) return { error: "This number is already connected. Remove it from WhatsApp Linked devices before pairing again." };
   if (runtime.pairingCode && Date.now() - runtime.pairingIssuedAt < 110000) return { code: runtime.pairingCode, id: runtime.id };
   if (runtime.pairingPromise) return runtime.pairingPromise;
   runtime.pairingPromise = (async () => {
     let lastError = "WhatsApp socket was not ready.";
     // Render and Heroku can take several seconds to establish the first WebSocket.
     for (let attempt = 1; attempt <= 6; attempt += 1) {
-      if (runtime.sock.user) return { error: "This number is already connected." };
+      if (runtime.config.runtime.connectionState === "open" && runtime.sock.user) return { error: "This number is already connected." };
       await sleep(attempt === 1 ? 7000 : 4000);
       try {
         const code = await Promise.race([
@@ -163,7 +163,7 @@ async function connectSession(id, phone = "", controller = false) {
     if (connection === "open") { runtime.config.runtime.connectionState = "open"; runtime.config.runtime.lastConnectedAt = Date.now(); runtime.starting = false; await persistence.ensureSession(id, runtime.sock.user?.id?.split(":")[0] || phone); console.log(`[${id}] connected as ${runtime.sock.user?.id}`); await sendConnectionMessage(runtime); startAutoPoster(runtime); }
     if (connection === "close") {
       runtime.config.runtime.connectionState = "closed"; runtime.config.runtime.lastDisconnectedAt = Date.now(); runtime.starting = false; const code = getDisconnectCode(lastDisconnect);
-      if (code === DisconnectReason.loggedOut) { await persistence.markStatus(id, "logged_out"); sessions.delete(id); console.error(`[${id}] logged out; user must pair again.`); return; }
+      if (code === DisconnectReason.loggedOut) { await persistence.removeSession(id); try { fs.rmSync(sessionFolder(id), { recursive: true, force: true }); } catch {} sessions.delete(id); console.error(`[${id}] stale/invalid credentials removed; user can pair again.`); return; }
       clearInterval(runtime.autoPosterTimer);
       runtime.sock = null;
       sessions.delete(id);
@@ -194,7 +194,13 @@ const manager = {
   async pair(phone) {
     const digits = String(phone || "").replace(/\D/g, ""); if (digits.length < 7 || digits.length > 15) throw new Error("Use a full phone number with country code, digits only.");
     if (baseConfig.maxSessions > 0 && sessions.size - (sessions.has("controller") ? 1 : 0) >= baseConfig.maxSessions) throw new Error("The maximum number of linked sessions has been reached.");
-    const id = `user_${digits}`; const runtime = await connectSession(id, digits, false); return requestPairing(runtime, digits);
+    const id = `user_${digits}`;
+    const existing = sessions.get(id);
+    if (existing?.config.runtime.connectionState === "open" && existing.sock?.user) return { error: "This number is already connected. Remove it from WhatsApp Linked devices before pairing again." };
+    if (existing) { clearTimeout(existing.reconnectTimer); clearInterval(existing.autoPosterTimer); try { existing.sock?.end?.(new Error("replaced by fresh pairing request")); } catch {} sessions.delete(id); }
+    await persistence.removeSession(id);
+    try { fs.rmSync(sessionFolder(id), { recursive: true, force: true }); } catch {}
+    return requestPairing(await connectSession(id, digits, false), digits);
   },
   list: () => [...sessions.values()].map(item => ({ id: item.id, account: item.sock?.user?.id || null, state: item.config.runtime.connectionState }))
 };
