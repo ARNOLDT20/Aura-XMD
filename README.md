@@ -188,6 +188,32 @@ You can also open `/dashboard` without the query string; Aura-XMD will show a fr
 
 If Render shows `404 Not Found`, deploy the latest `main` commit and confirm the service is a **Web Service** running `npm start`, not a Static Site. The `/health` response includes the dashboard URL so it can be copied directly.
 
+## Per-JID website autopost queues
+
+The dashboard's **Autopost control center** gives every session and target JID its own isolated queue. Configure one channel, group, or private chat without changing any other target.
+
+Each target supports its own:
+
+- WhatsApp JID (`@newsletter`, `@g.us`, or `@s.whatsapp.net`)
+- Website or RSS/Atom source URL
+- Fetch interval and post interval
+- Enabled/paused state
+- FIFO queue of website items and manual posts
+- Queue count and last-fetch error
+
+The worker fetches new items, queues them, and sends **one item at a time** to each configured JID. Text, images, videos, audio, and documents are supported when the source exposes media or a dashboard post includes a media URL. Media is watermarked before delivery when FFmpeg supports its type.
+
+From the dashboard:
+
+1. Open **Autopost control center**.
+2. Enter the session ID, normally `controller`.
+3. Enter the exact target JID.
+4. Enter the site's RSS/Atom URL where possible. A normal website URL is accepted as a single update.
+5. Set fetch and post intervals, then save the target.
+6. Use **Fetch** to pull the first queue, or add manual posts below the target form.
+
+Queues are persisted with the session state in PostgreSQL. Pausing, clearing, or removing one target does not affect any other JID.
+
 If the pairing page is public, set `PAIR_TOKEN` so only people with that secret can create sessions. The WhatsApp `.pair` command remains available through the linked controller account.
 
 The first/controller number still needs one initial login. It can be paired with `PHONE_NUMBER`, or an existing `BLAZE_SESSION_ID` can be imported for migration. New user numbers do not need session IDs: they are created with `.pair` or the web form.
