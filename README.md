@@ -162,7 +162,7 @@ https://your-public-host.example/pair
 
 ## Owner dashboard
 
-Aura-XMD includes a mobile-first owner dashboard at `/dashboard`. It is inspired by the supplied neon bot-console design but redesigned for Aura-XMD and BLAZE TECH. It shows:
+Aura-XMD includes a mobile-first owner dashboard at `/dashboard` (aliases: `/panel` and `/owner`). It is inspired by the supplied neon bot-console design but redesigned for Aura-XMD and BLAZE TECH. It shows:
 
 - Live online, connecting, and offline session counts
 - Every isolated WhatsApp runtime and linked account
@@ -178,13 +178,15 @@ Protect it in production with a dashboard token:
 DASHBOARD_TOKEN=use-a-long-random-secret
 ```
 
-Then open:
+Then open the simple link:
 
 ```text
 https://your-public-host.example/dashboard?token=use-a-long-random-secret
 ```
 
-If `DASHBOARD_TOKEN` is not set, Aura-XMD falls back to `PAIR_TOKEN`; in local development with neither token set, the dashboard is open. Never leave both unset on a public deployment. The dashboard never displays database passwords, session credentials, or auth blobs.
+You can also open `/dashboard` without the query string; Aura-XMD will show a friendly token form instead of a not-found page. If `DASHBOARD_TOKEN` is not set, Aura-XMD falls back to `PAIR_TOKEN`; in local development with neither token set, the dashboard is open. Never leave both unset on a public deployment. The dashboard never displays database passwords, session credentials, or auth blobs.
+
+If Render shows `404 Not Found`, deploy the latest `main` commit and confirm the service is a **Web Service** running `npm start`, not a Static Site. The `/health` response includes the dashboard URL so it can be copied directly.
 
 If the pairing page is public, set `PAIR_TOKEN` so only people with that secret can create sessions. The WhatsApp `.pair` command remains available through the linked controller account.
 
