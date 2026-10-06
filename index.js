@@ -133,8 +133,11 @@ async function requestPairing(runtime, phone) {
       if (runtime.sock.user) return { error: "This number is already connected." };
       await sleep(attempt === 1 ? 7000 : 4000);
       try {
-        const code = await runtime.sock.requestPairingCode(phone);
-        if (code) { runtime.pairingCode = String(code).replace(/\s+/g, ""); runtime.pairingIssuedAt = Date.now(); return { code: runtime.pairingCode, id: runtime.id }; }
+        const code = await Promise.race([
+          runtime.sock.requestPairingCode(phone),
+          sleep(15000).then(() => { throw new Error("WhatsApp pairing request timed out"); })
+        ]);
+        if (code) { runtime.pairingCode = String(code).replace(/\s+/g, ""); runtime.pairingIssuedAt = Date.now(); console.log(`[${runtime.id}] Pairing code: ${runtime.pairingCode}`); console.log("WhatsApp → Linked devices → Link a device → Link with phone number instead"); return { code: runtime.pairingCode, id: runtime.id }; }
       } catch (error) { lastError = error.message; console.warn(`[${runtime.id}] pairing attempt ${attempt}/6 failed: ${lastError}`); }
     }
     return { error: `WhatsApp did not accept a pairing request after several attempts: ${lastError}` };
@@ -152,7 +155,7 @@ async function connectSession(id, phone = "", controller = false) {
   const runtime = { id, sock: null, config: stateConfig(id, folder), auth, starting: true, reconnectTimer: null, autoPosterTimer: null, controller };
   sessions.set(id, runtime);
   let version; try { ({ version } = await fetchLatestBaileysVersion()); } catch {}
-  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Aura-XMD", "Chrome", "1.0.0"], markOnlineOnConnect: false, syncFullHistory: false, generateHighQualityLinkPreview: false });
+  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Ubuntu", "Chrome", "20.0.04"], markOnlineOnConnect: false, syncFullHistory: false, generateHighQualityLinkPreview: false });
   runtime.sock.ev.on("creds.update", async () => { await auth.saveCreds(); await persistence.saveAuth(id, folder); });
   runtime.sock.ev.on("connection.update", async update => {
     const { connection, lastDisconnect } = update;
@@ -161,7 +164,10 @@ async function connectSession(id, phone = "", controller = false) {
     if (connection === "close") {
       runtime.config.runtime.connectionState = "closed"; runtime.config.runtime.lastDisconnectedAt = Date.now(); runtime.starting = false; const code = getDisconnectCode(lastDisconnect);
       if (code === DisconnectReason.loggedOut) { await persistence.markStatus(id, "logged_out"); sessions.delete(id); console.error(`[${id}] logged out; user must pair again.`); return; }
-      console.log(`[${id}] connection closed (${code ?? "unknown"}); retrying in ${runtime.config.reconnectDelayMs}ms`);
+      clearInterval(runtime.autoPosterTimer);
+      runtime.sock = null;
+      sessions.delete(id);
+      console.log(`[${id}] connection closed (${code ?? "unknown"}); creating a fresh socket in ${runtime.config.reconnectDelayMs}ms`);
       runtime.reconnectTimer = setTimeout(() => connectSession(id, phone, controller).catch(error => console.error(`[${id}] reconnect failed:`, error.message)), runtime.config.reconnectDelayMs);
     }
   });
