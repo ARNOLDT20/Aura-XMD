@@ -228,6 +228,8 @@ Each target supports its own:
 
 The worker fetches new items, queues them, and sends **one item at a time** to each configured JID. Text, images, videos, audio, and documents are supported when the source exposes media or a dashboard post includes a media URL. Media is watermarked before delivery when FFmpeg supports its type.
 
+The reader supports RSS 2.0, Atom, WordPress feeds, Blogger-style feeds, and ordinary article pages. For each item it checks rich `content:encoded`, RSS `description`, Atom `summary` or `content`, then discovers media from RSS enclosures, Atom enclosure links, `media:content`, `media:thumbnail`, embedded article images, `og:image`, and Twitter card images. Relative links and media URLs are resolved against the source website automatically. Use a feed URL where possible, such as `https://example.com/feed/` or `https://example.com/rss.xml`, rather than a category page. The bot sends the title, cleaned description, source link, and discovered media as one WhatsApp post; if the media host is unavailable, it sends the item as text instead of dropping it.
+
 From the dashboard:
 
 1. Open **Autopost control center**.
