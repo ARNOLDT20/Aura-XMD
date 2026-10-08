@@ -160,6 +160,31 @@ The process also serves a browser pairing page at `/pair` and a JSON service che
 https://your-public-host.example/pair
 ```
 
+## Keep the Render service awake with UptimeRobot
+
+Aura-XMD exposes a lightweight public health endpoint specifically for uptime monitors:
+
+```text
+https://aura-xmd.onrender.com/health
+```
+
+Create an UptimeRobot **HTTP(s)** monitor with these settings:
+
+| Setting | Value |
+|---|---|
+| Monitor type | HTTP(s) |
+| Friendly name | Aura-XMD health |
+| URL | `https://aura-xmd.onrender.com/health` |
+| Monitoring interval | 5 minutes on the free UptimeRobot plan |
+| Keyword monitoring | Off |
+| Timeout | Default |
+
+The endpoint intentionally requires no dashboard password, because the monitor must reach it automatically. It returns HTTP `200` while the controller is starting, reconnecting, or open, and should be used only for availability—not for private dashboard data.
+
+UptimeRobot can prevent a **free Render Web Service** from idling by sending regular inbound requests. It does not guarantee that WhatsApp stays linked forever: Render restarts, WhatsApp session invalidation, database failures, and provider outages still require the bot's reconnect and persistence systems. For a true always-on production process, use a paid persistent Render instance or another always-on host. Also configure UptimeRobot alert contacts so you are notified when `/health` fails.
+
+Do not monitor `/dashboard` or `/api/dashboard`; those routes are password-protected. Do not paste `DASHBOARD_PASSWORD`, `DATABASE_URL`, or session credentials into UptimeRobot.
+
 ## Owner dashboard
 
 Aura-XMD includes a mobile-first owner dashboard at `/dashboard` (aliases: `/panel` and `/owner`). It is inspired by the supplied neon bot-console design but redesigned for Aura-XMD and BLAZE TECH. It shows:
