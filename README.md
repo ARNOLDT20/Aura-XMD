@@ -285,6 +285,8 @@ The following environment variables are supported:
 | `RECONNECT_DELAY_MS` | `5000` | Delay between transient reconnect attempts |
 | `LOG_LEVEL` | `silent` | Pino log level; use `info` while diagnosing connection issues |
 
+Owner-only commands automatically recognize the currently connected WhatsApp account for each isolated runtime, including normal phone JIDs, device-suffixed JIDs, WhatsApp LIDs, self-messages, and group messages sent by that account. `OWNER_NUMBER` is only an optional fallback for a fixed owner number; it is not required for a paired user session to use its own owner commands.
+
 Never commit or publicly share `session/`; it contains the WhatsApp credentials. If credentials were exposed, unlink the device from WhatsApp and remove the session directory before pairing again.
 
 ### Import a BLAZE session code
