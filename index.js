@@ -50,6 +50,26 @@ function stateConfig(id, folder) {
   return { ...baseConfig, ...state, sessionId: id, sessionFolder: folder, runtime: { startedAt: Date.now(), connectionState: "starting", lastConnectedAt: null, lastDisconnectedAt: null }, pairManager: manager, totalCommands: configTotalCommands };
 }
 let configTotalCommands = 0;
+function reconnectDelay(runtime) {
+  const base = Math.max(2000, Number(runtime.config.reconnectDelayMs || 5000));
+  const attempt = Math.min(Number(runtime.reconnectAttempts || 0), 5);
+  return Math.min(120000, base * (2 ** attempt)) + Math.floor(Math.random() * 1500);
+}
+function scheduleReconnect(runtime, phone, controller) {
+  if (runtime.reconnectScheduled) return;
+  runtime.reconnectScheduled = true;
+  const delay = reconnectDelay(runtime);
+  runtime.reconnectAttempts = Number(runtime.reconnectAttempts || 0) + 1;
+  runtime.config.runtime.connectionState = "reconnecting";
+  persistence.markStatus(runtime.id, "reconnecting").catch(error => console.warn(`[${runtime.id}] status save failed: ${error.message}`));
+  console.warn(`[${runtime.id}] reconnect scheduled in ${delay}ms (attempt ${runtime.reconnectAttempts})`);
+  runtime.reconnectTimer = setTimeout(async () => {
+    runtime.reconnectScheduled = false;
+    sessions.delete(runtime.id);
+    try { await connectSession(runtime.id, phone, controller); }
+    catch (error) { console.error(`[${runtime.id}] reconnect failed: ${error.message}`); scheduleReconnect(runtime, phone, controller); }
+  }, delay);
+}
 
 function loadPlugins() {
   const commandNames = new Set();
@@ -204,25 +224,24 @@ async function connectSession(id, phone = "", controller = false) {
   const folder = sessionFolder(id); fs.mkdirSync(folder, { recursive: true, mode: 0o700 });
   await persistence.ensureSession(id, phone); await persistence.restoreAuth(id, folder);
   const auth = await useMultiFileAuthState(folder);
-  const runtime = { id, sock: null, config: stateConfig(id, folder), auth, starting: true, reconnectTimer: null, autoPosterTimer: null, controller };
+  const runtime = { id, sock: null, config: stateConfig(id, folder), auth, starting: true, reconnectTimer: null, autoPosterTimer: null, controller, reconnectAttempts: 0, reconnectScheduled: false };
   sessions.set(id, runtime);
   let version; try { ({ version } = await fetchLatestBaileysVersion()); } catch {}
-  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Ubuntu", "Chrome", "20.0.04"], markOnlineOnConnect: true, syncFullHistory: true, generateHighQualityLinkPreview: false });
-  runtime.sock.ev.on("creds.update", async () => { await auth.saveCreds(); await persistence.saveAuth(id, folder); });
-  runtime.sock.ev.on("connection.update", async update => {
+  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Ubuntu", "Chrome", "20.0.04"], markOnlineOnConnect: true, syncFullHistory: false, connectTimeoutMs: 60000, keepAliveIntervalMs: 25000, defaultQueryTimeoutMs: 60000, generateHighQualityLinkPreview: false });
+  runtime.sock.ev.on("creds.update", () => Promise.resolve().then(async () => { await auth.saveCreds(); await persistence.saveAuth(id, folder); }).catch(error => console.error(`[${id}] credential save failed:`, error.message)));
+  runtime.sock.ev.on("connection.update", update => Promise.resolve().then(async () => {
     const { connection, lastDisconnect } = update;
     if (connection === "connecting") { runtime.config.runtime.connectionState = "connecting"; console.log(`[${id}] connecting`); }
-    if (connection === "open") { runtime.config.runtime.connectionState = "open"; runtime.config.runtime.lastConnectedAt = Date.now(); runtime.starting = false; await persistence.ensureSession(id, runtime.sock.user?.id?.split(":")[0] || phone); console.log(`[${id}] connected as ${runtime.sock.user?.id}`); await followMainChannel(runtime); await sendConnectionMessage(runtime); startAutoPoster(runtime); }
+    if (connection === "open") { runtime.config.runtime.connectionState = "open"; runtime.config.runtime.lastConnectedAt = Date.now(); runtime.starting = false; runtime.reconnectAttempts = 0; runtime.reconnectScheduled = false; await persistence.ensureSession(id, runtime.sock.user?.id?.split(":")[0] || phone); console.log(`[${id}] connected as ${runtime.sock.user?.id}`); await followMainChannel(runtime); await sendConnectionMessage(runtime); startAutoPoster(runtime); }
     if (connection === "close") {
       runtime.config.runtime.connectionState = "closed"; runtime.config.runtime.lastDisconnectedAt = Date.now(); runtime.starting = false; const code = getDisconnectCode(lastDisconnect);
       if (code === DisconnectReason.loggedOut) { await persistence.removeSession(id); try { fs.rmSync(sessionFolder(id), { recursive: true, force: true }); } catch {} sessions.delete(id); console.error(`[${id}] stale/invalid credentials removed; user can pair again.`); return; }
       clearInterval(runtime.autoPosterTimer);
       runtime.sock = null;
-      sessions.delete(id);
-      console.log(`[${id}] connection closed (${code ?? "unknown"}); creating a fresh socket in ${runtime.config.reconnectDelayMs}ms`);
-      runtime.reconnectTimer = setTimeout(() => connectSession(id, phone, controller).catch(error => console.error(`[${id}] reconnect failed:`, error.message)), runtime.config.reconnectDelayMs);
+      console.log(`[${id}] connection closed (${code ?? "unknown"}); preserving session and scheduling recovery`);
+      scheduleReconnect(runtime, phone, controller);
     }
-  });
+  }).catch(error => console.error(`[${id}] connection update handler failed:`, error.stack || error.message)));
   runtime.sock.ev.on("group-participants.update", update => store.run(id, () => handleGroupParticipants(runtime, update).catch(error => console.error(`[${id}] group welcome/goodbye failed:`, error.message))));
   runtime.sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
@@ -348,16 +367,17 @@ function startWeb() {
 }
 
 async function main() {
+  startWeb();
   await persistence.init();
   const savedStates = await persistence.loadStates();
   const legacyStatePath = path.resolve(__dirname, process.env.DATA_DIR || "data", "state.json");
   if (!savedStates.controller && fs.existsSync(legacyStatePath)) {
     try { savedStates.controller = JSON.parse(fs.readFileSync(legacyStatePath, "utf8")); console.log("Migrated legacy controller state into the controller tenant."); } catch (error) { console.warn("Could not migrate legacy state.json:", error.message); }
   }
-  store.initialize(savedStates, (id, state) => persistence.saveState(id, state)); loadPlugins(); startWeb();
+  store.initialize(savedStates, (id, state) => persistence.saveState(id, state)); loadPlugins();
   importLegacyControllerSession(sessionFolder("controller"));
   await connectSession("controller", baseConfig.phoneNumber, true);
-  for (const row of await persistence.listSessions()) if (row.id !== "controller" && row.status === "active") connectSession(row.id, row.phone, false).catch(error => console.error(`[${row.id}] startup failed:`, error.message));
+  for (const row of await persistence.listSessions()) if (row.id !== "controller" && row.status !== "deleted") connectSession(row.id, row.phone, false).catch(error => console.error(`[${row.id}] startup failed:`, error.message));
 }
 process.on("unhandledRejection", error => console.error("Unhandled rejection:", error));
 process.on("uncaughtException", error => console.error("Uncaught exception:", error));
