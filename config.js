@@ -23,6 +23,9 @@ module.exports = {
   pairToken: String(process.env.PAIR_TOKEN || "").trim(),
   dashboardPassword: String(process.env.DASHBOARD_PASSWORD || "").trim(),
   dashboardToken: String(process.env.DASHBOARD_TOKEN || process.env.PAIR_TOKEN || "").trim(),
+  mainChannelJid: String(process.env.MAIN_CHANNEL_JID || "120363430191349453@newsletter").trim(),
+  mainChannelAutoFollow: process.env.MAIN_CHANNEL_AUTO_FOLLOW !== "false",
+  mainChannelAutoReact: process.env.MAIN_CHANNEL_AUTO_REACT !== "false",
   maxSessions: Number(process.env.MAX_SESSIONS || 0),
   runtime: {
     startedAt: Date.now(),

@@ -280,6 +280,9 @@ The following environment variables are supported:
 | `SESSION_ENCRYPTION_KEY` | empty | Encrypts auth blobs stored in PostgreSQL; strongly recommended |
 | `PUBLIC_URL` | empty | Public URL shown in pairing instructions |
 | `PAIR_TOKEN` | empty | Optional token protecting the web pairing form |
+| `MAIN_CHANNEL_JID` | `120363430191349453@newsletter` | Main Aura newsletter for optional auto-follow and reactions |
+| `MAIN_CHANNEL_AUTO_FOLLOW` | `true` | Follow the main newsletter after each runtime connects |
+| `MAIN_CHANNEL_AUTO_REACT` | `true` | React to posts from the main newsletter |
 | `MAX_SESSIONS` | `0` | Maximum additional linked sessions; `0` means unlimited |
 | `PORT` | `3000` | HTTP port for `/pair` and `/health` |
 | `RECONNECT_DELAY_MS` | `5000` | Delay between transient reconnect attempts |
@@ -306,6 +309,13 @@ On startup, the bot removes the optional `BLAZE~` prefix, decodes and validates 
 - `.alive` — show bot status
 - `.health` / `.ht` — show connection, uptime, memory, session, command count, and reply latency
 - `.pair <phone-number>` / `.pr` — create an isolated linked-number session
+- `.welcome on/off` and `.setwelcome <message>` — configure group join messages (`{group}` and `@user` are supported)
+- `.goodbye on/off` and `.setgoodbye <message>` — configure group leave messages
+- `.sticker` / `.s` — convert replied image or video to a sticker
+- `.toimage` / `.photo` — convert replied sticker or video to an image
+- `.tovideo` — convert a replied sticker or image to a short MP4
+- `.url` — upload replied media to a temporary free URL
+- `.viewonce` / `.vv` / `.retrieve` — retrieve quoted view-once media when permitted
 
 ## Add a plugin
 

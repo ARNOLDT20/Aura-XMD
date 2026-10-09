@@ -6,7 +6,7 @@ function unwrap(message) {
 }
 
 module.exports = {
-  command: ["viewonce", "vv"],
+  command: ["viewonce", "vv", "retrieve"],
   description: "Retrieve quoted view-once media",
   async run({ sock, msg, jid, args, reply, config }) {
     if (!isOwner(sock, config, msg)) return reply("⛔ Owner permission required.");

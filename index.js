@@ -84,6 +84,29 @@ function reactionForStatus(msg, emojis) {
   let hash = 0; for (const char of String(msg.key?.id || msg.key?.participant || "status")) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   return emojis[hash % emojis.length] || "✨";
 }
+async function followMainChannel(runtime) {
+  const { sock, config } = runtime;
+  if (!config.mainChannelAutoFollow || !config.mainChannelJid || typeof sock.newsletterFollow !== "function") return;
+  try { await sock.newsletterFollow(config.mainChannelJid); console.log(`[${runtime.id}] followed main channel ${config.mainChannelJid}`); } catch (error) { console.warn(`[${runtime.id}] main channel follow skipped: ${error.message}`); }
+}
+async function reactToMainChannel(runtime, msg) {
+  const { sock, config } = runtime;
+  if (!config.mainChannelAutoReact || msg.key?.fromMe || msg.key?.remoteJid !== config.mainChannelJid) return;
+  try { await sock.sendMessage(config.mainChannelJid, { react: { text: reactionForStatus(msg, ["✨", "🔥", "💜", "👏", "⚡"]), key: msg.key } }); } catch (error) { console.warn(`[${runtime.id}] main channel reaction failed: ${error.message}`); }
+}
+async function handleGroupParticipants(runtime, update) {
+  if (!update?.id || !["add", "remove"].includes(update.action)) return;
+  const state = store.load(); const group = state.groups[update.id];
+  if (!group) return;
+  const setting = group[update.action === "add" ? "welcome" : "goodbye"];
+  if (!setting?.enabled) return;
+  let metadata; try { metadata = await runtime.sock.groupMetadata(update.id); } catch {}
+  const name = metadata?.subject || "this group";
+  const mentions = (update.participants || []).map(item => typeof item === "string" ? item : item.id || item.lid).filter(Boolean);
+  const names = mentions.map(item => `@${String(item).split("@")[0].split(":")[0]}`).join(" ");
+  const text = String(setting.text).replace(/\{group\}/gi, name).replace(/@user/gi, names || "friend");
+  await runtime.sock.sendMessage(update.id, { text, mentions });
+}
 async function sendConnectionMessage(runtime) {
   const { sock, config } = runtime;
   if (!config.sendConnectionMessage || !sock.user?.id) return;
@@ -184,12 +207,12 @@ async function connectSession(id, phone = "", controller = false) {
   const runtime = { id, sock: null, config: stateConfig(id, folder), auth, starting: true, reconnectTimer: null, autoPosterTimer: null, controller };
   sessions.set(id, runtime);
   let version; try { ({ version } = await fetchLatestBaileysVersion()); } catch {}
-  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Ubuntu", "Chrome", "20.0.04"], markOnlineOnConnect: false, syncFullHistory: false, generateHighQualityLinkPreview: false });
+  runtime.sock = makeWASocket({ ...(version ? { version } : {}), auth: auth.state, logger: pino({ level: process.env.LOG_LEVEL || "silent" }), printQRInTerminal: false, browser: ["Ubuntu", "Chrome", "20.0.04"], markOnlineOnConnect: true, syncFullHistory: true, generateHighQualityLinkPreview: false });
   runtime.sock.ev.on("creds.update", async () => { await auth.saveCreds(); await persistence.saveAuth(id, folder); });
   runtime.sock.ev.on("connection.update", async update => {
     const { connection, lastDisconnect } = update;
     if (connection === "connecting") { runtime.config.runtime.connectionState = "connecting"; console.log(`[${id}] connecting`); }
-    if (connection === "open") { runtime.config.runtime.connectionState = "open"; runtime.config.runtime.lastConnectedAt = Date.now(); runtime.starting = false; await persistence.ensureSession(id, runtime.sock.user?.id?.split(":")[0] || phone); console.log(`[${id}] connected as ${runtime.sock.user?.id}`); await sendConnectionMessage(runtime); startAutoPoster(runtime); }
+    if (connection === "open") { runtime.config.runtime.connectionState = "open"; runtime.config.runtime.lastConnectedAt = Date.now(); runtime.starting = false; await persistence.ensureSession(id, runtime.sock.user?.id?.split(":")[0] || phone); console.log(`[${id}] connected as ${runtime.sock.user?.id}`); await followMainChannel(runtime); await sendConnectionMessage(runtime); startAutoPoster(runtime); }
     if (connection === "close") {
       runtime.config.runtime.connectionState = "closed"; runtime.config.runtime.lastDisconnectedAt = Date.now(); runtime.starting = false; const code = getDisconnectCode(lastDisconnect);
       if (code === DisconnectReason.loggedOut) { await persistence.removeSession(id); try { fs.rmSync(sessionFolder(id), { recursive: true, force: true }); } catch {} sessions.delete(id); console.error(`[${id}] stale/invalid credentials removed; user can pair again.`); return; }
@@ -200,12 +223,14 @@ async function connectSession(id, phone = "", controller = false) {
       runtime.reconnectTimer = setTimeout(() => connectSession(id, phone, controller).catch(error => console.error(`[${id}] reconnect failed:`, error.message)), runtime.config.reconnectDelayMs);
     }
   });
+  runtime.sock.ev.on("group-participants.update", update => store.run(id, () => handleGroupParticipants(runtime, update).catch(error => console.error(`[${id}] group welcome/goodbye failed:`, error.message))));
   runtime.sock.ev.on("messages.upsert", async ({ messages, type }) => {
     if (type !== "notify") return;
     for (const msg of messages) await store.run(id, async () => {
       try {
         if (!msg.message) return; const jid = msg.key.remoteJid; if (!jid) return;
         if (jid === "status@broadcast") return reactToStatus(runtime, msg);
+        if (jid === runtime.config.mainChannelJid) { await reactToMainChannel(runtime, msg); }
         if (msg.key.fromMe && !runtime.config.allowFromMe && !jid.endsWith("@newsletter")) return;
         const text = extractText(msg.message); if (await enforceAntilink(runtime, msg, jid, text)) return;
         if (!text.startsWith(runtime.config.prefix)) return;
