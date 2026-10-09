@@ -47,7 +47,7 @@ async function uploadUrl(buffer, fileName, mimetype) {
 }
 
 module.exports = {
-  command: ["sticker", "s", "toimage", "photo", "tovideo", "url", "url2"],
+  command: ["sticker", "s", "take", "toimage", "photo", "tovideo", "url", "url2"],
   description: "Convert replied media to sticker, image, video, or a temporary URL",
   async run({ sock, msg, jid, args, reply, command }) {
     const quoted = getQuotedMessage(msg);
@@ -61,7 +61,7 @@ module.exports = {
       } catch (error) { return reply(`❌ Could not create URL: ${error.message}`); }
     }
     if (!media) return reply("Reply to an image, video, or sticker first.");
-    const target = ["sticker", "s"].includes(command) ? "sticker" : command === "toimage" || command === "photo" ? "image" : "video";
+    const target = ["sticker", "s", "take"].includes(command) ? "sticker" : command === "toimage" || command === "photo" ? "image" : "video";
     if (target === "sticker" && media.type === "stickerMessage") return reply("That is already a sticker.");
     try {
       const buffer = await downloadMediaMessage(quoted, "buffer", {});
