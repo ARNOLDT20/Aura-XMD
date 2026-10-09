@@ -11,6 +11,9 @@ const sections = {
 │ .menu
 │ .help
 │ .aura status
+│ .menu2 .uptime .botinfo
+│ .owner .repo .github .jid
+│ .joke .riddle .funfact .coinflip
 ╰──────────────`,
   channels: `╭─〔 📣 CHANNELS · OWNER 〕
 │ .channel jid
@@ -53,6 +56,11 @@ const sections = {
 │ .setname <name>
 │ .brand watermark <text>
 │ .brand notice <text>
+│ .sticker / .s
+│ .toimage / .photo
+│ .tovideo
+│ .url / .url2
+│ .retrieve / .vv
 ╰──────────────`
 };
 
@@ -64,6 +72,9 @@ const compactAll = `╭─〔 ✨ CORE 〕
 │ .menu
 │ .help
 │ .aura status
+│ .menu2 .uptime .botinfo
+│ .owner .repo .github .jid
+│ .joke .riddle .funfact .coinflip
 ╰──────────────
 
 ╭─〔 📣 CHANNELS · OWNER 〕
@@ -120,6 +131,11 @@ const compactAll = `╭─〔 ✨ CORE 〕
 │ .setname <name>
 │ .brand watermark <text>
 │ .brand notice <text>
+│ .sticker / .s
+│ .toimage / .photo
+│ .tovideo
+│ .url / .url2
+│ .retrieve / .vv
 │
 │ Short aliases: .p .a .m .ch .sch .al
 │ .w .bw .pro .de .k .ta .sr .as .self .gs .gc

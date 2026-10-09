@@ -14,11 +14,11 @@ async function targetList(sock, target) {
 }
 
 module.exports = {
-  command: ["addstatus", "statuspost", "selfstatus", "mystatus", "groupstatus", "gcstatus"],
+  command: ["addstatus", "statuspost", "selfstatus", "mystatus", "groupstatus", "gcstatus", "gstatus"],
   description: "Post a text or quoted media status",
   async run({ sock, msg, jid, args, reply, config, command }) {
     if (!isOwner(sock, config, msg)) return reply("⛔ Owner permission required.");
-    const fixedTarget = ["groupstatus", "gcstatus"].includes(command) ? jid : "self";
+    const fixedTarget = ["groupstatus", "gcstatus", "gstatus"].includes(command) ? jid : "self";
     if (fixedTarget === jid && !jid.endsWith("@g.us")) return reply("Use .groupstatus inside a group chat.");
     const target = fixedTarget === "self" ? "self" : fixedTarget;
     if (fixedTarget === "self" && !["selfstatus", "mystatus"].includes(command)) {
@@ -33,8 +33,8 @@ module.exports = {
     const mediaType = quotedContent && ["imageMessage", "videoMessage", "audioMessage", "documentMessage"].find(type => quotedContent[type]);
 
     if (mediaType) {
-      const buffer = await watermarkMedia(await downloadMediaMessage(quoted, "buffer", {}), media.mimetype || "", config);
       const media = quotedContent[mediaType];
+      const buffer = await watermarkMedia(await downloadMediaMessage(quoted, "buffer", {}), media.mimetype || "", config);
       const key = mediaType.replace("Message", "");
       await sock.sendMessage("status@broadcast", {
         [key]: buffer,

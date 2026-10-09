@@ -2,7 +2,7 @@ const store = require("../lib/store");
 const { getTargetJids, getGroupMetadata, requireGroupAdmin, requireBotAdmin } = require("../lib/helpers");
 const { sendModerationWarning } = require("../lib/moderation");
 module.exports = {
-  command: ["antilink", "warn", "badwords", "promote", "demote", "kick", "add", "mute", "unmute", "groupinfo", "tagall", "open", "close", "setsubject", "setdesc", "invite", "welcome", "goodbye", "setwelcome", "setgoodbye"],
+  command: ["antilink", "warn", "badwords", "promote", "demote", "kick", "add", "mute", "unmute", "groupinfo", "group", "tagall", "open", "close", "setsubject", "gname", "setdesc", "gdesc", "invite", "welcome", "goodbye", "setwelcome", "setgoodbye", "remove", "del"],
   description: "Group moderation and administration",
   async run({ sock, msg, jid, args, reply, config, command }) {
     if (!jid.endsWith("@g.us")) return reply("⛔ This command can only be used in a group.");
@@ -13,7 +13,7 @@ module.exports = {
     state.groups[jid].welcome ||= { enabled: false, text: "Welcome @user to *{group}*!" };
     state.groups[jid].goodbye ||= { enabled: false, text: "Goodbye @user. We wish you well!" };
     const group = state.groups[jid];
-    const action = command || "antilink";
+    const action = ({ group: "groupinfo", gname: "setsubject", gdesc: "setdesc", remove: "kick", del: "kick" }[command] || command || "antilink");
 
     if (["welcome", "goodbye", "setwelcome", "setgoodbye"].includes(action)) {
       if (!(await requireGroupAdmin({ sock, jid, msg, config, reply }))) return;

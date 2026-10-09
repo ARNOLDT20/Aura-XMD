@@ -8,12 +8,12 @@ function unwrap(message) {
 }
 
 module.exports = {
-  command: ["download", "save", "media", "audio", "mp3", "music", "song", "play", "video"],
+  command: ["download", "save", "media", "audio", "mp3", "music", "song", "play", "video", "youtube", "ytmp3", "yta", "ytaudio", "tiktok", "facebook", "fb", "instagram", "pinterest", "socialdl", "sdl", "twitter", "tw", "x"],
   description: "Download media by URL or search name, or extract MP3 audio",
   async run({ sock, msg, jid, args, reply, config, command }) {
     const url = args.find(value => /^https?:\/\//i.test(value));
-    const audioCommand = ["audio", "mp3", "music", "song"].includes(command) || args.includes("audio") || args.includes("mp3");
-    const searchCommand = ["audio", "mp3", "music", "song", "play", "video"].includes(command);
+    const audioCommand = ["audio", "mp3", "music", "song", "youtube", "ytmp3", "yta", "ytaudio"].includes(command) || args.includes("audio") || args.includes("mp3");
+    const searchCommand = ["audio", "mp3", "music", "song", "play", "video", "youtube", "ytmp3", "yta", "ytaudio"].includes(command);
     const searchText = args.filter(value => !/^\d{3,4}$/.test(value) && !["audio", "mp3"].includes(value.toLowerCase())).join(" ").trim();
     const target = url || (searchCommand && searchText ? `ytsearch1:${searchText}` : null);
     if (target) {
