@@ -271,6 +271,7 @@ The following environment variables are supported:
 | `BLAZE_SESSION_ID` | empty | Base64 BLAZE session code, optionally prefixed with `BLAZE~` |
 | `BOT_NAME` | `Aura-XMD` | Name shown by the bot |
 | `OWNER_NAME` | `Arnold` | Owner label used by `.alive` |
+| `OMDB_API_KEY` | empty | Optional movie lookup key for `.movie`; keep it private |
 | `OWNER_NUMBER` | placeholder | Owner number label, digits only |
 | `PREFIX` | `.` | Command prefix |
 | `ALLOW_SELF_MESSAGES` | `false` | Set `true` to allow commands sent from the bot account for testing |
@@ -484,8 +485,8 @@ Antilink is configured separately for each group:
 
 When enabled, non-admin links are removed and the group receives a warning. Keep `data/state.json` private because it contains channel and moderation settings.
 
-## LuxAlgo feature compatibility
+## Additional utility features
 
-The LuxAlgo archive was audited and its portable, keyless features were adapted to Aura-XMD's plugin interface rather than copied wholesale. The imported features are session-safe and include `.tts`, `.tts2`, `.tts3`, and `.trt` for free text-to-speech with English, Swahili, Urdu, and Arabic options; `.base64`, `.unbase64`, `.urlencode`, `.urldecode`, `.roll`, `.flip`, `.pick`, `.calculate`, `.timenow`, and `.date`; `.weather <city>` through the public wttr.in endpoint; `.wiki <topic>` through the public Wikipedia summary endpoint; `.npm <package>` through the public npm registry; and `.take`, `.sticker`, `.toimage`, `.tovideo`, and `.url` media tools.
+Aura-XMD includes session-safe utility features such as `.tts`, `.tts2`, `.tts3`, and `.trt` for free text-to-speech with English, Swahili, Urdu, and Arabic options; `.base64`, `.unbase64`, `.urlencode`, `.urldecode`, `.roll`, `.flip`, `.pick`, `.calculate`, `.timenow`, and `.date`; `.weather <city>` through wttr.in; `.wiki <topic>` through Wikipedia; `.npm <package>` through the npm registry; and `.take`, `.sticker`, `.toimage`, `.tovideo`, and `.url` media tools.
 
-The archive also contained hard-coded third-party API keys, alternate Baileys forks, MongoDB/SQLite single-user state, payment/admin controls, and plugins that execute arbitrary requests or code. Those were not copied into Aura-XMD. Any feature requiring a private API key must be added through an environment variable and a reviewed adapter; it must never be embedded in a plugin or committed to Git.
+Optional API-backed features use environment variables only. Private keys are never embedded in plugins, shown in the dashboard, or committed to Git. If an API variable is missing, the command returns a setup message instead of exposing a credential or crashing the runtime.

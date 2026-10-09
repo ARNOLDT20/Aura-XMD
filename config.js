@@ -7,6 +7,7 @@ module.exports = {
   watermarkText: process.env.WATERMARK_TEXT || "BLAZE TECH",
   reactionNotice: process.env.REACTION_NOTICE || "React ❤️ and share this update ✨",
   apifyToken: process.env.APIFY_TOKEN || "",
+  omdbApiKey: String(process.env.OMDB_API_KEY || "").trim(),
   ownerName: process.env.OWNER_NAME || "ARNOLDT20",
   ownerNumber: cleanPhoneNumber(process.env.OWNER_NUMBER || ""),
   // Required only for first-time pairing. Include country code, without '+'.
