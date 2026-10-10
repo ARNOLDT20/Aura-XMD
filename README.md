@@ -493,3 +493,7 @@ Aura-XMD includes session-safe utility features such as `.tts`, `.tts2`, `.tts3`
 Optional API-backed features use environment variables only. Private keys are never embedded in plugins, shown in the dashboard, or committed to Git. If an API variable is missing, the command returns a setup message instead of exposing a credential or crashing the runtime.
 
 The default menu artwork is the neon Aura-XMD banner at `assets/aura-menu-neon.png`. It shows the configured owner label, prefix, WhatsApp platform, online status, Aura-XMD name, and BLAZE TECH branding. It intentionally does not show phone numbers, pairing codes, session IDs, database URLs, passwords, or API keys.
+
+## Dashboard configuration
+
+Open `/dashboard` and sign in with `DASHBOARD_PASSWORD` (or the configured dashboard token). The **Bot configuration & maintenance** panel is per session: choose a session ID, set the prefix, bot name, watermark, and reaction notice, then save. Prefix changes apply immediately; after saving `!`, Aura-XMD responds to `!ping` and deliberately ignores `.ping` for that session. The same panel can restart a selected runtime while preserving its saved WhatsApp authentication, or clear temporary media files and autopost queues without logging the number out.

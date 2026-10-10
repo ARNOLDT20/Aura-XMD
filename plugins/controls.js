@@ -61,7 +61,7 @@ module.exports = {
     if (command === "menuimage") {
       const action = (args[0] || "set").toLowerCase();
       if (action === "reset") {
-        state.menuImagePath = "assets/aura-menu.jpg";
+        state.menuImagePath = "assets/aura-menu-neon.png";
         fs.rmSync(customMenuPath, { force: true });
         store.save(state);
         return reply("✅ Menu image reset to the Aura default.");
