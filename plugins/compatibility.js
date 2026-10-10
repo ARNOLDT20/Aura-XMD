@@ -22,8 +22,8 @@ module.exports = {
     if (command === "rizz") return reply("✨ Are you a keyboard? Because you are just my type.");
     if (command === "fancy") return reply(`✨ ${args.join(" ") || "Aura-XMD"}`);
     if (command === "owner") return reply(`👑 Owner: ${config.ownerName}\nContact: ${config.ownerNumber || "the configured owner account"}`);
-    if (["repo", "github"].includes(command)) return reply("🔗 https://github.com/ARNOLDT20/Aura-XMD");
-    if (command === "repozip") return reply("📦 Download the repository from https://github.com/ARNOLDT20/Aura-XMD/archive/refs/heads/main.zip");
+    if (["repo", "github"].includes(command)) return reply(`🔗 ${config.repoUrl || "https://github.com/ARNOLDT20/BLAZE-TECH"}`);
+    if (command === "repozip") return reply(`📦 Download the repository from ${(config.repoUrl || "https://github.com/ARNOLDT20/BLAZE-TECH").replace(/\/$/, "")}/archive/refs/heads/main.zip`);
     if (["groupid", "id", "jid"].includes(command)) return reply(`🆔 ${jid}`);
     if (command === "mode") return reply("🔒 Aura-XMD mode: PRIVATE");
     if (["profile", "profile2"].includes(command)) return reply(`👤 ${String(msg.key?.participant || sock.user?.id || "user").split("@")[0]}`);

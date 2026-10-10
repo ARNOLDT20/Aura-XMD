@@ -270,6 +270,7 @@ The following environment variables are supported:
 | `PHONE_NUMBER` | empty | First-run pairing number, digits only with country code |
 | `BLAZE_SESSION_ID` | empty | Base64 BLAZE session code, optionally prefixed with `BLAZE~` |
 | `BOT_NAME` | `Aura-XMD` | Name shown by the bot |
+| `REPO_URL` | `https://github.com/ARNOLDT20/BLAZE-TECH` | Repository returned by `.repo`, `.github`, and `.repozip` |
 | `OWNER_NAME` | `Arnold` | Owner label used by `.alive` |
 | `OMDB_API_KEY` | empty | Optional movie lookup key for `.movie`; keep it private |
 | `OWNER_NUMBER` | placeholder | Owner number label, digits only |
@@ -490,3 +491,5 @@ When enabled, non-admin links are removed and the group receives a warning. Keep
 Aura-XMD includes session-safe utility features such as `.tts`, `.tts2`, `.tts3`, and `.trt` for free text-to-speech with English, Swahili, Urdu, and Arabic options; `.base64`, `.unbase64`, `.urlencode`, `.urldecode`, `.roll`, `.flip`, `.pick`, `.calculate`, `.timenow`, and `.date`; `.weather <city>` through wttr.in; `.wiki <topic>` through Wikipedia; `.npm <package>` through the npm registry; and `.take`, `.sticker`, `.toimage`, `.tovideo`, and `.url` media tools.
 
 Optional API-backed features use environment variables only. Private keys are never embedded in plugins, shown in the dashboard, or committed to Git. If an API variable is missing, the command returns a setup message instead of exposing a credential or crashing the runtime.
+
+The default menu artwork is the neon Aura-XMD banner at `assets/aura-menu-neon.png`. It shows the configured owner label, prefix, WhatsApp platform, online status, Aura-XMD name, and BLAZE TECH branding. It intentionally does not show phone numbers, pairing codes, session IDs, database URLs, passwords, or API keys.

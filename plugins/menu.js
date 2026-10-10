@@ -156,7 +156,8 @@ module.exports = {
     const caption = requested === "all"
       ? `${intro}\n\n${compactAll}`
       : `${intro}\n\n${sections[selected[0]]}`;
-    const imagePath = path.join(__dirname, "..", state.menuImagePath || "assets/aura-menu.jpg");
+    const configuredImage = state.menuImagePath === "assets/aura-menu.jpg" ? "assets/aura-menu-neon.png" : (state.menuImagePath || "assets/aura-menu-neon.png");
+    const imagePath = path.join(__dirname, "..", configuredImage);
     if (fs.existsSync(imagePath)) {
       // One media message: WhatsApp renders the menu caption beneath the image.
       await sock.sendMessage(jid, { image: fs.readFileSync(imagePath), caption: caption.slice(0, 4000) }, jid.endsWith("@newsletter") ? {} : { quoted: msg });

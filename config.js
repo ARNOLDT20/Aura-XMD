@@ -4,6 +4,7 @@ const cleanPhoneNumber = value => String(value || "").replace(/\D/g, "");
 
 module.exports = {
   botName: process.env.BOT_NAME || "Aura-XMD",
+  repoUrl: String(process.env.REPO_URL || "https://github.com/ARNOLDT20/BLAZE-TECH").trim().replace(/\/$/, ""),
   watermarkText: process.env.WATERMARK_TEXT || "BLAZE TECH",
   reactionNotice: process.env.REACTION_NOTICE || "React ❤️ and share this update ✨",
   apifyToken: process.env.APIFY_TOKEN || "",
